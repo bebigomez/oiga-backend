@@ -14,6 +14,10 @@ app.use(cors())
 app.use(json())
 app.use(middleware.requestLogger)
 
+app.get('/ping', (req, res) => {
+  res.json('pong')
+})
+
 app.use('/products', productsRouter)
 
 app.use(middleware.unknownEndpoint)
