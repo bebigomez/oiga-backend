@@ -15,7 +15,7 @@ app.use(json())
 app.use(middleware.requestLogger)
 
 app.get('/ping', (req, res) => {
-  res.json('pong')
+  res.json('pong private')
 })
 
 app.use('/products', productsRouter)
