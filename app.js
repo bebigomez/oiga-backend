@@ -5,6 +5,7 @@ const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
 const { PORT } = require('./utils/config')
 const productsRouter = require('./controllers/products')
+const ordersRouter = require('./controllers/orders')
 
 const app = express()
 
@@ -19,6 +20,7 @@ app.get('/ping', (req, res) => {
 })
 
 app.use('/products', productsRouter)
+app.use('/orders', ordersRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
