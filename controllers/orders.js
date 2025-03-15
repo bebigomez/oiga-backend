@@ -1,6 +1,34 @@
-const ordersRouter = require('express').Router()
 const { db } = require('../utils/config')
+const axios = require('axios')
+const ordersRouter = require('express').Router()
 
+const TRELLO_API_BASE_URL = 'https://api.trello.com/1'
+const TRELLO_API_KEY = process.env.TRELLO_API_KEY
+const TRELLO_API_TOKEN = process.env.TRELLO_API_TOKEN
+const TRELLO_TODO_LIST_ID = process.env.TRELLO_TODO_LIST_ID
+
+const trelloAxios = axios.create({
+  baseURL: TRELLO_API_BASE_URL,
+  params: {
+    key: TRELLO_API_KEY,
+    token: TRELLO_API_TOKEN,
+  },
+})
+
+async function createCard(listId, cardName, cardDesc) {
+  try {
+    const response = await trelloAxios.post('/cards', {
+      idList: listId,
+      name: cardName,
+      desc: cardDesc,
+    })
+    console.log('Card created successfully:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('Error creating card:', error.response.data)
+    throw new Error('Failed to create card in Trello')
+  }
+}
 
 ordersRouter.post('/', async (req, res) => {
   const { total_price, customer_name, customer_last_name, customer_phone, items } = req.body
@@ -34,7 +62,25 @@ ordersRouter.post('/', async (req, res) => {
 
     await Promise.all(insertProductsPromises) // Esperar a que todos los productos se inserten
 
-    // 3. Responder al cliente con el ID del pedido
+    const productIdsDescription = items
+      .map(item => `Product ID: ${item.id} | Nombre: ${item.name}`)
+      .join('\n')
+
+    const cardDescription =
+      'Cliente: ' + customer_name + ' ' + customer_last_name + '\n' +
+      'Teléfono: ' + customer_phone + '\n' +
+      'Precio total: $' + total_price + '\n\n' +
+      'Detalles del pedido:\n' +
+      productIdsDescription
+
+    await createCard(
+      TRELLO_TODO_LIST_ID, 
+      process.env.NODE_ENV === 'development' 
+        ? `[DEVELOPMENT] Nueva orden: ${order_id}` 
+        : `Nueva orden: ${order_id}`, 
+      cardDescription
+    );
+
     res.status(201).json({ message: 'Order created successfully', order_id })
   } catch (error) {
     console.error('Error creating order:', error)
