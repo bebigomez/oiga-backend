@@ -11,7 +11,6 @@ const DB_CONFIGS = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: 5432,
-    ssl: { rejectUnauthorized: false },
   },
   development: {
     host: process.env.DEV_DB_HOST,
@@ -40,8 +39,8 @@ const knexConfig = {
 const db = knex(knexConfig)
 
 db.raw('SELECT 1+1 AS result')
-.then(() => console.log(`Conexión exitosa a la BD (${ENV})`))
-.catch((err) => console.error('Error de conexión:', err))
+  .then(() => console.log(`Conexión exitosa a la BD (${ENV})`))
+  .catch((err) => console.error('Error de conexión:', err))
 
 module.exports = {
   PORT,
