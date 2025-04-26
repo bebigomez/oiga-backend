@@ -32,6 +32,7 @@ const bucketName = process.env.BUCKET_NAME
 const bucketRegion = process.env.BUCKET_REGION
 const accessKey = process.env.ACCESS_KEY
 const secretAccessKey = process.env.SECRET_ACCESS_KEY
+const r2Endpoint = process.env.SECRET_R2_ENDPOINT
 
 const s3Client = new S3Client({
   credentials: {
@@ -39,6 +40,7 @@ const s3Client = new S3Client({
     secretAccessKey: secretAccessKey,
   },
   region: bucketRegion,
+  endpoint: r2Endpoint
 })
 
 productsRouter.get('/', async (req, res) => {
