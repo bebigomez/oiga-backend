@@ -43,7 +43,14 @@ const s3Client = new S3Client({
 
 productsRouter.get('/', async (req, res) => {
   try {
-    let query = db('products').select('*')
+    // let query = db('products').select('*')
+
+    let query = db('products')
+      .select(
+        'products.*',
+        'conditions.name as condition_name'
+      )
+      .leftJoin('conditions', 'products.condition_id', 'conditions.id')
 
     const products = await query
 
@@ -91,7 +98,16 @@ productsRouter.get('/', async (req, res) => {
 productsRouter.get('/:id', async (req, res) => {
   const { id } = req.params
   try {
-    const product = await db('products').where({ id }).first()
+    // const product = await db('products').where({ id }).first()
+
+    const product = await db('products')
+      .select(
+        'products.*',
+        'conditions.name as condition_name',
+      )
+      .leftJoin('conditions', 'products.condition_id', 'conditions.id')
+      .where('products.id', id)
+      .first()
 
     if (!product) {
       return res.status(404).json({ message: 'Producto no encontrado' })
