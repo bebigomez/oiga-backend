@@ -28,17 +28,20 @@ const upload = multer({ storage: storage })
 const generateFileName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString('hex')
 
-const bucketName = process.env.BUCKET_NAME
-const bucketRegion = process.env.BUCKET_REGION
+// const bucketRegion = process.env.BUCKET_REGION
 const accessKey = process.env.ACCESS_KEY
 const secretAccessKey = process.env.SECRET_ACCESS_KEY
+const r2Endpoint = process.env.SECRET_R2_ENDPOINT
+
+const bucketName = process.env.BUCKET_NAME
 
 const s3Client = new S3Client({
+  region: 'auto',
+  endpoint: r2Endpoint,
   credentials: {
     accessKeyId: accessKey,
     secretAccessKey: secretAccessKey,
   },
-  region: bucketRegion,
 })
 
 productsRouter.get('/', async (req, res) => {
