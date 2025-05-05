@@ -10,9 +10,10 @@ const crypto = require('crypto')
 const {
   S3Client,
   PutObjectCommand,
-  GetObjectCommand,
+  // GetObjectCommand,
 } = require('@aws-sdk/client-s3')
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
+// const { getSignedUrl } = require('@aws-sdk/s3-request-presigner')
+const { getSignedImageUrls } = require('../utils/s3')
 
 // const app = express()
 
@@ -73,18 +74,7 @@ productsRouter.get('/', async (req, res) => {
         }
 
         // Generamos la URL firmada para cada imagen
-        product.imageUrls = await Promise.all(
-          imageKeys.map(async (imageKey) => {
-            return await getSignedUrl(
-              s3Client,
-              new GetObjectCommand({
-                Bucket: bucketName,
-                Key: imageKey,
-              }),
-              { expiresIn: 60 } // 60 segundos
-            )
-          })
-        )
+        product.imageUrls = await getSignedImageUrls(imageKeys)
       }
     }
 
@@ -129,18 +119,7 @@ productsRouter.get('/:id', async (req, res) => {
       }
 
       // Generamos las URL firmadas para cada imagen
-      product.imageUrls = await Promise.all(
-        imageKeys.map(async (imageKey) => {
-          return await getSignedUrl(
-            s3Client,
-            new GetObjectCommand({
-              Bucket: bucketName,
-              Key: imageKey,
-            }),
-            { expiresIn: 120 } // 120 segundos de validez
-          )
-        })
-      )
+      product.imageUrls = await getSignedImageUrls(imageKeys)
     }
 
     // Devuelve el producto con las URLs de las imágenes

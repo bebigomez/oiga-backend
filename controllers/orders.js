@@ -15,6 +15,61 @@ const trelloAxios = axios.create({
   },
 })
 
+ordersRouter.get('/', async (req, res) => {
+  try {
+    const orders = await db('orders').select('*')
+
+    if (orders.length === 0) {
+      return res.status(404).json({ message: 'No orders found' })
+    }
+
+    res.status(200).json({ orders })
+  } catch (error) {
+    console.error('Error fetching orders:', error)
+    res.status(500).json({ message: 'Failed to fetch orders' })
+  }
+})
+
+const { getSignedImageUrls } = require('../utils/s3')
+
+ordersRouter.get('/:id', async (req, res) => {
+  const { id } = req.params
+
+  try {
+    const order = await db('orders').where('id', id).first()
+
+    if (!order) {
+      return res.status(404).json({ message: `Order with ID ${id} not found` })
+    }
+
+    const products = await db('order_products')
+      .where('order_products.order_id', id)
+      .join('products', 'order_products.product_id', 'products.id')
+      .select(
+        'products.id as product_id',
+        'products.name',
+        'products.description',
+        'products.image_keys',
+        'order_products.price as ordered_price',
+        'order_products.quantity'
+      )
+
+    const productsWithSignedUrls = await Promise.all(
+      products.map(async (product) => {
+        const imageUrls = await getSignedImageUrls(product.image_keys)
+        return { ...product, imageUrls }
+      })
+    )
+
+    res.status(200).json({ order, products: productsWithSignedUrls })
+  } catch (error) {
+    console.error('Error fetching order with details:', error)
+    res.status(500).json({ message: 'Failed to fetch order' })
+  }
+})
+
+
+
 async function createCard(listId, cardName, cardDesc) {
   try {
     const response = await trelloAxios.post('/cards', {
@@ -74,12 +129,12 @@ ordersRouter.post('/', async (req, res) => {
       productIdsDescription
 
     await createCard(
-      TRELLO_TODO_LIST_ID, 
-      process.env.NODE_ENV === 'development' 
-        ? `[DEVELOPMENT] Nueva orden: ${order_id}` 
-        : `Nueva orden: ${order_id}`, 
+      TRELLO_TODO_LIST_ID,
+      process.env.NODE_ENV === 'development'
+        ? `[DEVELOPMENT] Nueva orden: ${order_id}`
+        : `Nueva orden: ${order_id}`,
       cardDescription
-    );
+    )
 
     res.status(201).json({ message: 'Order created successfully', order_id })
   } catch (error) {
